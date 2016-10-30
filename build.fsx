@@ -49,6 +49,7 @@ let private npmFileName =
     match isWindows with
     | true ->  
         let path = System.Environment.GetEnvironmentVariable("PATH")
+        printfn "PATH: %s" path
         path
         |> fun path -> path.Split ';'
         |> Seq.tryFind (fun p -> p.Contains "nodejs")
@@ -76,6 +77,7 @@ Target "Clean" (fun _ ->
 
 Target "Npm" (fun _ ->
     Npm (fun p ->
+            printfn "node.js found on %A" npmFileName
             { p with
                 NpmFilePath = npmFileName
                 Command = Install Standard
