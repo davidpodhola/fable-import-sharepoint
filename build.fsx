@@ -49,14 +49,16 @@ let private npmFileName =
     match isWindows with
     | true ->  
         let path = System.Environment.GetEnvironmentVariable("PATH")
-        printfn "PATH: %s" path
+        //printfn "PATH: %s" path
         path
         |> fun path -> path.Split ';'
         |> Seq.tryFind (fun p -> p.Contains "nodejs")
         |> fun res ->
             match res with
             | Some npm when File.Exists (sprintf @"%s\npm.cmd" npm) -> (sprintf @"%s\npm.cmd" npm)
-            | _ -> "./packages/Npm.js/tools/npm.cmd"
+            | _ -> 
+                    let npmInPackages = "./packages/Npm.js/tools/npm.cmd"
+                    if File.Exists npmInPackages then npmInPackages else "npm.cmd" 
     | _ -> 
         let info = new ProcessStartInfo("which","npm")
         info.StandardOutputEncoding <- System.Text.Encoding.UTF8
