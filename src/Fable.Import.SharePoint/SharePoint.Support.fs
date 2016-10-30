@@ -112,30 +112,39 @@ let executeQuery continue1 (clientContext : ClientContext)  =
     clientContext.executeQueryAsync(
         System.Func<_,_,_>(fun _ _ -> continue1(clientContext) ),
         System.Func<_,_,_>(onQueryFailed)
-    )
-
-let createCustomList title url continue1 (clientContext : ClientContext) =
-    let web = clientContext.get_web()
-    let listCollection = web.get_lists()
-    clientContext.load(listCollection)
-    let list1 = listCollection.getByTitle(title)
-    clientContext.load(list1)
-    clientContext.executeQueryAsync(
-        System.Func<_,_,_>(fun _ _ -> continue1(clientContext) ),
-        System.Func<_,_,_>(fun _ _ -> 
-                let listCreationInfo = ListCreationInformation()
-                listCreationInfo.set_title(title)
-                listCreationInfo.set_url("Lists/"+url)
-                listCreationInfo.set_templateType(100.0)
-                let list1 = web.get_lists().add(listCreationInfo)
-
-                clientContext.load(list1);
-                clientContext.executeQueryAsync(
-                    System.Func<_,_,_>(fun _ _ -> continue1(clientContext) ),
-                    System.Func<_,_,_>(onQueryFailed)
-                )        
+    )    
+    
+let executeQueryAsyncWithFallback (clientContext:ClientContext) (fallback) =
+    Async.FromContinuations( fun( cont, econt, ccont ) ->
+        clientContext.executeQueryAsync(
+            System.Func<_,_,_>(fun _ _ -> cont() ),
+            System.Func<_,_,_>(fallback)
         )        
     )
+
+let executeQueryAsync (clientContext:ClientContext) =
+    executeQueryAsyncWithFallback clientContext onQueryFailed
+
+let createCustomList title url (clientContext : ClientContext) =
+    async {
+        let web = clientContext.get_web()
+        let listCollection = web.get_lists()
+        clientContext.load(listCollection)
+        let list1 = listCollection.getByTitle(title)
+        clientContext.load(list1)
+        let doCreateList () = 
+                async {
+                    let listCreationInfo = ListCreationInformation()
+                    listCreationInfo.set_title(title)
+                    listCreationInfo.set_url("Lists/"+url)
+                    listCreationInfo.set_templateType(100.0)
+                    let list1 = web.get_lists().add(listCreationInfo)
+
+                    clientContext.load(list1);
+                    do! executeQueryAsync clientContext
+                } |> Async.StartImmediate
+        do! executeQueryAsyncWithFallback clientContext  (  fun _ _ -> doCreateList () )                
+    }  |> Async.StartImmediate
 
 let private createCustomListInt title url (createContentType:bool) continue1 (listCollection:ListCollection) (web:Web) (clientContext : ClientContext) =
     let list1 = listCollection.getByTitle(title)
