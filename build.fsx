@@ -60,7 +60,7 @@ let private npmFileName =
                     let npmInPackages = "./packages/Npm.js/tools/npm.cmd"
                     if File.Exists npmInPackages then npmInPackages 
                     else 
-                        (*let info = new ProcessStartInfo("where","npm")
+                        let info = new ProcessStartInfo("where","npm.cmd")
                         info.StandardOutputEncoding <- System.Text.Encoding.UTF8
                         info.RedirectStandardOutput <- true
                         info.UseShellExecute        <- false
@@ -70,7 +70,7 @@ let private npmFileName =
                         match proc.ExitCode with
                             | 0 when not proc.StandardOutput.EndOfStream ->
                               proc.StandardOutput.ReadLine()
-                            | _ ->*) """C:\Program Files\nodejs\npm.cmd"""
+                            | _ -> """C:\Program Files\nodejs\npm.cmd"""
     | _ -> 
         let info = new ProcessStartInfo("which","npm")
         info.StandardOutputEncoding <- System.Text.Encoding.UTF8
