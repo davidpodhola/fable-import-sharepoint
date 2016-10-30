@@ -58,7 +58,19 @@ let private npmFileName =
             | Some npm when File.Exists (sprintf @"%s\npm.cmd" npm) -> (sprintf @"%s\npm.cmd" npm)
             | _ -> 
                     let npmInPackages = "./packages/Npm.js/tools/npm.cmd"
-                    if File.Exists npmInPackages then npmInPackages else "" 
+                    if File.Exists npmInPackages then npmInPackages 
+                    else 
+                        let info = new ProcessStartInfo("where","npm")
+                        info.StandardOutputEncoding <- System.Text.Encoding.UTF8
+                        info.RedirectStandardOutput <- true
+                        info.UseShellExecute        <- false
+                        info.CreateNoWindow         <- true
+                        use proc = Process.Start info
+                        proc.WaitForExit()
+                        match proc.ExitCode with
+                            | 0 when not proc.StandardOutput.EndOfStream ->
+                              proc.StandardOutput.ReadLine()
+                            | _ -> """C:\Program Files\nodejs\npm.cmd"""
     | _ -> 
         let info = new ProcessStartInfo("which","npm")
         info.StandardOutputEncoding <- System.Text.Encoding.UTF8
