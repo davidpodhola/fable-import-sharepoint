@@ -58,7 +58,7 @@ let private npmFileName =
             | Some npm when File.Exists (sprintf @"%s\npm.cmd" npm) -> (sprintf @"%s\npm.cmd" npm)
             | _ -> 
                     let npmInPackages = "./packages/Npm.js/tools/npm.cmd"
-                    if File.Exists npmInPackages then npmInPackages else "npm.cmd" 
+                    if File.Exists npmInPackages then npmInPackages else "" 
     | _ -> 
         let info = new ProcessStartInfo("which","npm")
         info.StandardOutputEncoding <- System.Text.Encoding.UTF8
@@ -80,11 +80,18 @@ Target "Clean" (fun _ ->
 Target "Npm" (fun _ ->
     Npm (fun p ->
             printfn "node.js found on %A" npmFileName
-            { p with
-                NpmFilePath = npmFileName
-                Command = Install Standard
-                WorkingDirectory = "./src/Fable.Import.SharePoint/"
-            })
+            if npmFileName = "" then
+                { p with
+                    Command = Install Standard
+                    WorkingDirectory = "./src/Fable.Import.SharePoint/"
+                }
+            else
+                { p with
+                    NpmFilePath = npmFileName
+                    Command = Install Standard
+                    WorkingDirectory = "./src/Fable.Import.SharePoint/"
+                }
+        )
 )
 
 Target "Build" (fun _ ->
