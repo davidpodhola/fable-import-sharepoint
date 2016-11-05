@@ -47,40 +47,40 @@ type FieldType =
     |WorkflowEventType 
     |WorkflowStatus
     with member this.toString = 
-       match this with
-        | AllDayEvent -> "AllDayEvent"
-        | Attachments -> "Attachments" 
-        | Boolean  -> "Boolean"
-        |Calculate -> "Calculate"
-        |Choice -> "Choice"
-        |Computed  -> "Computed"
-        |ContenttypeID   -> "ContenttypeID"
-        |Counter   -> "Counter"
-        |CrossProjectLink   -> "CrossProjectLink"
-        |Currency   -> "Currency"
-        |DateTime   -> "DateTime"
-        |Error   -> "Error"
-        |File   -> "File"
-        |Geolocation   -> "Geolocation"
-        |GridChoice   -> "GridChoice"
-        |Guid   -> "Guid"
-        |Integer   -> "Integer"
-        |Invalid   -> "Invalid"
-        |MaxItems   -> "MaxItems"
-        |ModStat   -> "ModStat"
-        |MultiChoice   -> "MultiChoice"
-        |Note   -> "Note"
-        |Number   -> "Number"
-        |OutcomeChoice   -> "OutcomeChoice"
-        |PageSeparator   -> "PageSeparator"
-        |Recurrence   -> "Recurrence"
-        |Text   -> "Text"
-        |ThreadIndex   -> "ThreadIndex"
-        |Threading   -> "Threading"
-        |Url  -> "Url"
-        | User   -> "User"
-        |WorkflowEventType   -> "WorkflowEventType"
-        |WorkflowStatus  -> "WorkflowStatus"
+         match this with
+            | AllDayEvent -> "AllDayEvent"
+            | Attachments -> "Attachments" 
+            | Boolean  -> "Boolean"
+            |Calculate -> "Calculate"
+            |Choice -> "Choice"
+            |Computed  -> "Computed"
+            |ContenttypeID   -> "ContenttypeID"
+            |Counter   -> "Counter"
+            |CrossProjectLink   -> "CrossProjectLink"
+            |Currency   -> "Currency"
+            |DateTime   -> "DateTime"
+            |Error   -> "Error"
+            |File   -> "File"
+            |Geolocation   -> "Geolocation"
+            |GridChoice   -> "GridChoice"
+            |Guid   -> "Guid"
+            |Integer   -> "Integer"
+            |Invalid   -> "Invalid"
+            |MaxItems   -> "MaxItems"
+            |ModStat   -> "ModStat"
+            |MultiChoice   -> "MultiChoice"
+            |Note   -> "Note"
+            |Number   -> "Number"
+            |OutcomeChoice   -> "OutcomeChoice"
+            |PageSeparator   -> "PageSeparator"
+            |Recurrence   -> "Recurrence"
+            |Text   -> "Text"
+            |ThreadIndex   -> "ThreadIndex"
+            |Threading   -> "Threading"
+            |Url  -> "Url"
+            | User   -> "User"
+            |WorkflowEventType   -> "WorkflowEventType"
+            |WorkflowStatus  -> "WorkflowStatus"
 
 type StandardFieldDefinition = {
     Name : string
@@ -141,44 +141,40 @@ let createCustomList title url (clientContext : ClientContext) =
         do! executeQueryAsyncWithFallback clientContext  (  fun _ _ -> doCreateList () )                
     } |> Async.StartImmediate
 
-let private createCustomListInt title url (createContentType:bool) continue1 (listCollection:ListCollection) (web:Web) (clientContext : ClientContext) =
-    let list1 = listCollection.getByTitle(title)
-    clientContext.load(list1)
-    let itemContentType = clientContext.get_web().get_contentTypes().getById("0x01")
-    clientContext.load(itemContentType)
+let createListContentType (list:List) (title) (itemContentType) (clientContext:ClientContext) = 
+    async {
+        let contentTypeCreationInformation = ContentTypeCreationInformation()
+        contentTypeCreationInformation.set_name(title)
+        contentTypeCreationInformation.set_parentContentType(itemContentType)
+        let newContentType = list.get_contentTypes().add(contentTypeCreationInformation)
+        clientContext.load(newContentType)
+        do! executeQueryAsync(clientContext)
+        return Some(newContentType)
+    } |> Async.RunSynchronously  
+
+
+let private createCustomListInt title url (createContentType:bool) (listCollection:ListCollection) (web:Web) (clientContext : ClientContext) =
+    async {
+        let list1 = listCollection.getByTitle(title)
+        clientContext.load(list1)
+        let itemContentType = clientContext.get_web().get_contentTypes().getById("0x01")
+        clientContext.load(itemContentType)
     
-    let createContentType (list:List) (andThen) = 
-        if createContentType then
-            let contentTypeCreationInformation = ContentTypeCreationInformation()
-            contentTypeCreationInformation.set_name(title)
-            contentTypeCreationInformation.set_parentContentType(itemContentType)
-            let newContentType = list.get_contentTypes().add(contentTypeCreationInformation)
-            clientContext.load(newContentType)
-            clientContext.executeQueryAsync(
-                System.Func<_,_,_>(fun _ _ -> andThen (Some(newContentType)) ),
-                System.Func<_,_,_>(onQueryFailed)
-            )
-        andThen None
+        do! executeQueryAsyncWithFallback clientContext (fun _ _ -> 
+                async {
+                    let listCreationInfo = ListCreationInformation()
+                    listCreationInfo.set_title(title)
+                    listCreationInfo.set_url("Lists/"+url)
+                    listCreationInfo.set_templateType(100.0)
+                    let list1 = web.get_lists().add(listCreationInfo)
 
-    clientContext.executeQueryAsync(
-        System.Func<_,_,_>(fun _ _ -> continue1 list1 None clientContext),
-        System.Func<_,_,_>(fun _ _ -> 
-                let listCreationInfo = ListCreationInformation()
-                listCreationInfo.set_title(title)
-                listCreationInfo.set_url("Lists/"+url)
-                listCreationInfo.set_templateType(100.0)
-                let list1 = web.get_lists().add(listCreationInfo)
+                    clientContext.load(list1);
+                    do! executeQueryAsync clientContext
 
-                clientContext.load(list1);
-                clientContext.executeQueryAsync(
-                    System.Func<_,_,_>(fun _ _ -> 
-                        let moveOn (contentType:ContentType option) : unit =
-                            continue1 list1 contentType clientContext
-                        createContentType list1 moveOn ),
-                    System.Func<_,_,_>(onQueryFailed)
-                )        
-        )        
-    )
+                    if createContentType then createListContentType list1 title itemContentType clientContext |> ignore
+                } |> Async.StartImmediate
+            )        
+    } |> Async.StartImmediate
 
 let createListColumn (list : List) (contentType:ContentType option) id name displayName (fieldTypeName:string) required (lookupListId:Guid option) (lookupFieldName:string option) (clientContext : ClientContext) =
     async {
@@ -253,7 +249,8 @@ let createCustomLists (listDefinitions:ListDefinition array) continue1 (clientCo
                     continue0 (index+1) -1 null None clientContext 
             else
                 let listDefinition =  listDefinitions.[index]
-                createCustomListInt listDefinition.DisplayName listDefinition.Url true (continue0 index (fieldsIndex+1) ) listCollection web clientContext
+                createCustomListInt listDefinition.DisplayName listDefinition.Url true listCollection web clientContext
+                (continue0 index (fieldsIndex+1) ) list  None clientContext
         else continue1(clientContext)
     continue0 0 -1 null None clientContext
 

@@ -230,7 +230,7 @@ module SP =
         member __.get_count(): float = jsNative
         member __.itemAtIndex(index: float): 'T = jsNative
         interface IEnumerable<'T> with
-        member __.getEnumerator(): IEnumerator<'T> = jsNative 
+            member __.getEnumerator(): IEnumerator<'T> = jsNative 
 
     and [<AllowNullLiteral>] IFromJson =
         abstract fromJson: initValue: obj -> unit
@@ -562,7 +562,7 @@ module SP =
         member __.getItemAtIndex(index: float): 'T = jsNative
         member __.fromJson(obj: obj): unit = jsNative
         interface IEnumerable<'T> with
-        member __.getEnumerator(): IEnumerator<'T> = jsNative
+            member __.getEnumerator(): IEnumerator<'T> = jsNative
 
     and [<AllowNullLiteral>] [<Import("ClientObjectList","SP")>] ClientObjectList<'T>(context: ClientRuntimeContext, objectPath: ObjectPath, childItemType: obj) =
         inherit ClientObjectCollection<'T>()
@@ -633,7 +633,7 @@ module SP =
         member __.get_count(): float = jsNative
         member __.writeToXml(writer: XmlWriter, serializationContext: SerializationContext): unit = jsNative
         interface IEnumerable<'T> with
-        member __.getEnumerator(): IEnumerator<'T> = jsNative
+            member __.getEnumerator(): IEnumerator<'T> = jsNative
 
     and [<AllowNullLiteral>] [<Import("ExceptionHandlingScope","SP")>] ExceptionHandlingScope(context: ClientRuntimeContext) =
         member __.startScope(): obj = jsNative
@@ -4477,15 +4477,15 @@ module SP =
 
             and [<AllowNullLiteral>] [<Import("UI.ApplicationPages.BaseSelectorComponent","SP")>] BaseSelectorComponent(key: string, ``type``: SelectorType) =
                 interface ISelectorComponent with
-                member __.get_scopeKey(): string = jsNative
-                member __.get_componentType(): SelectorType = jsNative
-                member __.get_selectedEntities(): obj = jsNative
-                member __.set_selectedEntities(value: obj): unit = jsNative
-                //member __.get_callback(): Func<obj, Sys.EventArgs, unit> = jsNative
-                //member __.set_callback(value: Func<obj, Sys.EventArgs, unit>): unit = jsNative
-                member __.revertTo(ent: ResolveEntity): unit = jsNative
-                member __.removeEntity(ent: ResolveEntity): unit = jsNative
-                member __.setEntity(ent: ResolveEntity): unit = jsNative
+                    member __.get_scopeKey(): string = jsNative
+                    member __.get_componentType(): SelectorType = jsNative
+                    member __.get_selectedEntities(): obj = jsNative
+                    member __.set_selectedEntities(value: obj): unit = jsNative
+                    //member __.get_callback(): Func<obj, Sys.EventArgs, unit> = jsNative
+                    //member __.set_callback(value: Func<obj, Sys.EventArgs, unit>): unit = jsNative
+                    member __.revertTo(ent: ResolveEntity): unit = jsNative
+                    member __.removeEntity(ent: ResolveEntity): unit = jsNative
+                    member __.setEntity(ent: ResolveEntity): unit = jsNative
 
             and [<AllowNullLiteral>] ICalendarController =
                 abstract moveToDate: date: string -> unit

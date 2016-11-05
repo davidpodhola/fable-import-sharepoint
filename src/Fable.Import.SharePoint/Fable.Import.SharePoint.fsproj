@@ -54,6 +54,7 @@
     <Compile Include="Fable.Import.SharePoint.fs" />
     <Compile Include="Browser.Support.fs" />
     <Compile Include="SharePoint.Support.fs" />
+    <None Include="package.json" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Fable.Core">
