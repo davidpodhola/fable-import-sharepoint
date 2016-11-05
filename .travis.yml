@@ -3,6 +3,6 @@ node_js:
   - "6"
 
 before_script:
-- npm install -g npm@'>=4'
+- npm install -g npm@'>=4.4'
 
 script: ./build.sh

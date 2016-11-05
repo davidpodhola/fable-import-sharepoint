@@ -33,6 +33,9 @@ else
   fi
   mono packages/FAKE/tools/FAKE.exe $@ --fsiargs -d:MONO build.fsx
   
+  npm --version
+  node --version
+  
   chmod +x src/Fable.Import.SharePoint/node_modules/.bin/fable
   src/Fable.Import.SharePoint/node_modules/.bin/fable
 fi
